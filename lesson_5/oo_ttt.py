@@ -1,4 +1,3 @@
-
 import random
 import os
 
@@ -16,9 +15,6 @@ class Square:
     def __str__(self):
         return self.marker
 
-    def is_unused(self):
-        return self.marker == Square.INITIAL_MARKER
-
     @property
     def marker(self):
         return self._marker
@@ -27,13 +23,12 @@ class Square:
     def marker(self, marker):
         self._marker = marker
 
+    def is_unused(self):
+        return self.marker == Square.INITIAL_MARKER
+
 class Board:
     def __init__(self):
         self.squares = {key: Square() for key in range(1, 10)}
-
-    def count_markers_for(self, player, keys):
-        markers = [self.squares[key].marker for key in keys]
-        return markers.count(player.marker)
 
     def display(self):
         print()
@@ -56,34 +51,29 @@ class Board:
         print("     |     |")
         print()
 
-    def display_with_clear(self):
-        clear_screen()
-        print('\n')
-        self.display()
-
-    def is_full(self):
-        return len(self.unused_squares()) == 0
-
     def mark_square_at(self, key, marker):
         self.squares[key].marker = marker
 
     def unused_squares(self):
-        return [
-            key for key, square in self.squares.items()
-            if square.is_unused()
-        ]
+        return [key
+                for key, square in self.squares.items()
+                if square.is_unused()]
+
+    def is_full(self):
+        return len(self.unused_squares()) == 0
+
+    def count_markers_for(self, player, keys):
+        markers = [self.squares[key].marker for key in keys]
+        return markers.count(player.marker)
+
+    def display_with_clear(self):
+        clear_screen()
+        print("\n")
+        self.display()
 
 class Player:
     def __init__(self, marker):
         self.marker = marker
-
-    @property
-    def marker(self):
-        return self._marker
-
-    @marker.setter
-    def marker(self, value):
-        self._marker = value
 
 class Human(Player):
     def __init__(self):
@@ -111,7 +101,6 @@ class TTTGame:
         self.computer = Computer()
 
     def play(self):
-        # SPIKE
         self.display_welcome_message()
         self.board.display()
 
@@ -130,24 +119,31 @@ class TTTGame:
         self.display_results()
         self.display_goodbye_message()
 
-    def is_game_over(self):
-        return self.board.is_full() or self.someone_won()
+    def display_welcome_message(self):
+        clear_screen()
+        print("Welcome to Tic Tac Toe!")
+        print()
 
-    def three_in_a_row(self, player, row):
-        return self.board.count_markers_for(player, row) == 3
+    def display_goodbye_message(self):
+        print("Thanks for playing Tic Tac Toe! Goodbye!")
 
-    def someone_won(self):
-        return (self.is_winner(self.human) or
-                self.is_winner(self.computer))
+    def display_results(self):
+        if self.is_winner(self.human):
+            print("You won! Congratulations!")
+        elif self.is_winner(self.computer):
+            print("I won! I won! Take that, human!")
+        else:
+            print("A tie game. How boring.")
 
-    def human_moves(self):      # was first_player_moves
+    def human_moves(self):
+        choice = None
         valid_choices = self.board.unused_squares()
-        choices_list = [str(choice) for choice in valid_choices]
-        choices_str = ', '.join(choices_list)
-
         while True:
-            prompt = f'Choose a square ({choices_str}): '
+            choices_list = [str(choice) for choice in valid_choices]
+            choices_str = ", ".join(choices_list)
+            prompt = f"Choose a square ({choices_str}): "
             choice = input(prompt)
+
             try:
                 choice = int(choice)
                 if choice in valid_choices:
@@ -160,28 +156,20 @@ class TTTGame:
 
         self.board.mark_square_at(choice, self.human.marker)
 
-
-    def computer_moves(self):   # was second_player_moves
+    def computer_moves(self):
         valid_choices = self.board.unused_squares()
         choice = random.choice(valid_choices)
         self.board.mark_square_at(choice, self.computer.marker)
 
-    def display_welcome_message(self):
-        clear_screen()
-        print("Welcome to Tic Tac Toe!")
-        print()
+    def is_game_over(self):
+        return self.board.is_full() or self.someone_won()
 
-    def display_goodbye_message(self):
-        print("Thanks for playing Tic Tac Toe! Goodbye!")
+    def three_in_a_row(self, player, row):
+        return self.board.count_markers_for(player, row) == 3
 
-
-    def display_results(self):
-        if self.is_winner(self.human):
-            print("You won! Congratulations!")
-        elif self.is_winner(self.computer):
-            print("I won! I won! Take that, human!")
-        else:
-            print("A tie game. How boring.")
+    def someone_won(self):
+        return (self.is_winner(self.human) or
+                self.is_winner(self.computer))
 
     def is_winner(self, player):
         for row in TTTGame.POSSIBLE_WINNING_ROWS:
